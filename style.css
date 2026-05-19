@@ -143,23 +143,67 @@ nav .wrapper{
 }
 
 .map-frame {
-  width: 80%;
+  width: 90%;
   height: 700px;
   border: 0;
 }
 
 .contact-p-e{
+  max-width: 1300px;
     display: flex;
     grid-row: auto;
     justify-content: center;
-    gap: 15%;
+    gap: 5%;
     padding-left: 10px;
     padding-right: 10px;
   }
 
+body{
+    margin: 0;
+    padding-top: 70px; /* because nav is fixed */
+    width: 100%;
+    min-height: 100vh;
+    background: white;
+}
+
+.page-layout {
+  width: 100%;
+  min-height: calc(100vh - 70px);
+  display: flex;
+  justify-content: center;
+}
+
+.body-content {
+  width: 1700px;        /* fixed body width */
+  min-height: calc(100vh - 70px);
+  border-left: 2px solid black;
+  border-right: 2px solid black;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: black;
+  background: #4a4747;
+  background: linear-gradient(17deg, rgba(74, 71, 71, 1) 0%, rgba(255, 255, 255, 1) 50%, rgba(125, 125, 125, 1) 100%);
+}
+
+.contact-p-e-a-containers
+{
+  margin-top: 10px;
+  padding: 6px;
+  background-color: whitesmoke;
+  border-radius: 8px;
+  border: 1px solid #242526;
+}
+
+
+
 @media screen and (max-width: 970px) {
   
-  
+  .wrapper .logo a{
+    font-size: 22px;
+  }
+
   .contact-p-e{
     display: block;
   }
@@ -292,6 +336,7 @@ nav input{
 
 body{
     padding-top: 70px;
+    
 }
 
 .body-text{
