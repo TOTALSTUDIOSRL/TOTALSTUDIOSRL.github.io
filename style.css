@@ -468,23 +468,33 @@ p {
 }
 
 .contact-p-e-a-containers {
-  min-height: 190px;
+  min-height: 150px;
   padding: 24px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: center;
+  gap: 18px;
   background: #f7f7f4;
   border: 1px solid #deded8;
   border-radius: 8px;
 }
 
-.contact-p-e-a-containers i {
-  color: #18191b;
-  font-size: 24px;
+.contact-label {
+  display: flex;
+  align-items: center;
+  gap: 14px;
 }
 
-.contact-p-e-a-containers h3 {
-  margin-top: 22px;
+.contact-label i {
+  color: #18191b;
+  font-size: 24px;
+  width: 26px;
+  flex: 0 0 26px;
+  text-align: center;
+}
+
+.contact-label h3 {
+  margin: 0;
 }
 
 .contact-p-e-a-containers p {
