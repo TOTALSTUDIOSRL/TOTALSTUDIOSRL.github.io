@@ -383,10 +383,12 @@ p {
 }
 
 .work-card img {
+  position: relative;
+  z-index: 1;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.35s ease;
+  transition: transform 0.35s ease, opacity 0.25s ease;
 }
 
 .work-card:hover img {
@@ -454,13 +456,18 @@ p {
 }
 
 .video-card img {
+  position: relative;
+  z-index: 1;
   width: 100%;
   height: calc(100% - 52px);
   aspect-ratio: 16 / 9;
   object-fit: cover;
+  transition: opacity 0.25s ease;
 }
 
 .video-card figcaption {
+  position: relative;
+  z-index: 1;
   padding: 16px 18px 18px;
   color: #ffffff;
   font-size: 15px;
