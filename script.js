@@ -112,8 +112,9 @@ const translations = {
 const workConfig = {
   folder: "images/work",
   prefix: "work",
-  extensions: ["jpg", "jpeg", "png", "webp"],
+  extensions: ["webp", "jpg", "jpeg", "png"],
   maxItems: 80,
+  stopAfterMisses: 4,
   gallerySelector: "#work-gallery",
   emptySelector: "#work-empty",
   buttonSelector: "#work-view-all",
@@ -135,6 +136,7 @@ const videoConfig = {
   prefix: "video",
   extensions: ["gif"],
   maxItems: 80,
+  stopAfterMisses: 4,
   gallerySelector: "#video-gallery",
   emptySelector: "#video-empty",
   buttonSelector: "#video-view-all",
@@ -177,6 +179,7 @@ function createMediaCard(config, src, fileNumber) {
   image.dataset.titleNumber = fileNumber;
   image.dataset.titleConfig = config.gallerySelector;
   image.loading = "lazy";
+  image.decoding = "async";
   image.addEventListener("load", () => {
     if (config.gallerySelector === "#work-gallery" || config.gallerySelector === "#video-gallery") {
       figure.dataset.aspect = image.naturalWidth / image.naturalHeight;
@@ -244,6 +247,15 @@ function updateViewAllButton(gallery, button) {
   });
 }
 
+function runWhenIdle(callback) {
+  if ("requestIdleCallback" in window) {
+    window.requestIdleCallback(callback, { timeout: 1200 });
+    return;
+  }
+
+  window.setTimeout(callback, 200);
+}
+
 function findMediaFile(config, fileNumber, extensionIndex = 0) {
   return new Promise((resolve) => {
     if (extensionIndex >= config.extensions.length) {
@@ -261,6 +273,24 @@ function findMediaFile(config, fileNumber, extensionIndex = 0) {
   });
 }
 
+async function appendMediaItem(config, gallery, emptyGallery, fileNumber) {
+  const src = await findMediaFile(config, fileNumber);
+
+  if (!src) {
+    return false;
+  }
+
+  gallery.appendChild(createMediaCard(config, src, fileNumber));
+  emptyGallery.classList.add("is-hidden");
+
+  if (config.gallerySelector === "#work-gallery") {
+    heroWorkImages.push(src);
+    seedHeroImages();
+  }
+
+  return true;
+}
+
 async function loadGallery(config) {
   const gallery = document.querySelector(config.gallerySelector);
   const emptyGallery = document.querySelector(config.emptySelector);
@@ -274,29 +304,30 @@ async function loadGallery(config) {
   viewAllButton.dataset.showLessKey = config.showLessKey;
   viewAllButton.textContent = translate(config.viewAllKey);
 
-  for (let index = 1; index <= config.maxItems; index += 1) {
-    const src = await findMediaFile(config, index);
+  let consecutiveMisses = 0;
 
-    if (src) {
-      gallery.appendChild(createMediaCard(config, src, index));
-      emptyGallery.classList.add("is-hidden");
+  for (let index = 1; index <= Math.min(previewLimit, config.maxItems); index += 1) {
+    const found = await appendMediaItem(config, gallery, emptyGallery, index);
+    consecutiveMisses = found ? 0 : consecutiveMisses + 1;
+  }
 
-      if (config.gallerySelector === "#work-gallery") {
-        heroWorkImages.push(src);
-        seedHeroImages();
+  layoutPuzzleGallery(config.gallerySelector);
+
+  runWhenIdle(async () => {
+    for (let index = previewLimit + 1; index <= config.maxItems; index += 1) {
+      const found = await appendMediaItem(config, gallery, emptyGallery, index);
+      consecutiveMisses = found ? 0 : consecutiveMisses + 1;
+
+      if (consecutiveMisses >= config.stopAfterMisses) {
+        break;
       }
     }
-  }
+
+    updateViewAllButton(gallery, viewAllButton);
+    layoutPuzzleGallery(config.gallerySelector);
+  });
 
   updateViewAllButton(gallery, viewAllButton);
-
-  if (config.gallerySelector === "#work-gallery") {
-    layoutPuzzleGallery("#work-gallery");
-  }
-
-  if (config.gallerySelector === "#video-gallery") {
-    layoutPuzzleGallery("#video-gallery");
-  }
 }
 
 function visibleWorkCards() {
