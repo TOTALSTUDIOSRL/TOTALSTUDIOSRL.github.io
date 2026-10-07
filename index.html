@@ -8,7 +8,17 @@
   <link rel="stylesheet" href="style.css">
   <title>TOTAL STUDIO</title>
 </head>
-<body>
+<body class="is-loading">
+  <div id="site-loader" class="site-loader" role="status" aria-live="polite" aria-label="Loading portfolio">
+    <div class="loader-mark">
+      <span>Total Studio</span>
+    </div>
+    <div class="loader-progress" aria-hidden="true">
+      <span id="loader-progress-bar"></span>
+    </div>
+    <p id="loader-progress-text">Loading portfolio 0%</p>
+  </div>
+
   <nav>
     <div class="wrapper">
       <div class="logo"><a href="#home">TOTAL STUDIO</a></div>

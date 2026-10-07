@@ -4,8 +4,14 @@ const languageButtons = document.querySelectorAll("[data-language]");
 const lightbox = document.querySelector("#media-lightbox");
 const lightboxImage = document.querySelector("#lightbox-image");
 const lightboxClose = document.querySelector(".lightbox-close");
+const siteLoader = document.querySelector("#site-loader");
+const loaderProgressBar = document.querySelector("#loader-progress-bar");
+const loaderProgressText = document.querySelector("#loader-progress-text");
 
 const previewLimit = 4;
+const preloadImageCount = 64;
+const preloadConcurrency = 8;
+const loaderFallbackDelay = 8000;
 let currentLanguage = localStorage.getItem("siteLanguage") || "en";
 
 const translations = {
@@ -166,6 +172,74 @@ function itemTitle(config, fileNumber) {
 
 function translate(key) {
   return translations[currentLanguage]?.[key] || translations.en[key] || "";
+}
+
+function updateLoaderProgress(loaded, total) {
+  if (!loaderProgressBar || !loaderProgressText) {
+    return;
+  }
+
+  const progress = total > 0 ? Math.round((loaded / total) * 100) : 100;
+  loaderProgressBar.style.width = `${progress}%`;
+  loaderProgressText.textContent = `Loading portfolio ${progress}%`;
+}
+
+function preloadImage(src) {
+  return new Promise((resolve) => {
+    const image = new Image();
+    image.onload = () => resolve(true);
+    image.onerror = () => resolve(false);
+    image.src = src;
+  });
+}
+
+async function preloadPortfolioImages() {
+  const total = Math.min(preloadImageCount, workConfig.maxItems);
+  let loaded = 0;
+  let nextIndex = 1;
+
+  updateLoaderProgress(loaded, total);
+
+  async function preloadNextImage() {
+    while (nextIndex <= total) {
+      const fileNumber = String(nextIndex).padStart(2, "0");
+      nextIndex += 1;
+
+      await preloadImage(`${workConfig.folder}/${workConfig.prefix}-${fileNumber}.webp`);
+      loaded += 1;
+      updateLoaderProgress(loaded, total);
+    }
+  }
+
+  const workers = Array.from(
+    { length: Math.min(preloadConcurrency, total) },
+    () => preloadNextImage()
+  );
+
+  await Promise.all(workers);
+}
+
+function revealSite() {
+  updateLoaderProgress(1, 1);
+  document.body.classList.remove("is-loading");
+
+  if (!siteLoader) {
+    return;
+  }
+
+  window.setTimeout(() => {
+    siteLoader.hidden = true;
+  }, 450);
+}
+
+async function waitForPortfolioPreload() {
+  let timeoutId;
+  const fallback = new Promise((resolve) => {
+    timeoutId = window.setTimeout(resolve, loaderFallbackDelay);
+  });
+
+  await Promise.race([preloadPortfolioImages(), fallback]);
+  window.clearTimeout(timeoutId);
 }
 
 function createMediaCard(config, src, fileNumber) {
@@ -531,14 +605,21 @@ function seedHeroImages() {
   });
 }
 
-loadGallery(workConfig);
-loadGallery(videoConfig);
-setLanguage(currentLanguage);
+async function initSite() {
+  setLanguage(currentLanguage);
+  await waitForPortfolioPreload();
+  revealSite();
 
-languageButtons.forEach((button) => {
-  button.addEventListener("click", () => setLanguage(button.dataset.language));
-});
+  loadGallery(workConfig);
+  loadGallery(videoConfig);
 
-if (heroImages.length > 0) {
-  setInterval(shuffleHeroWork, 4200);
+  languageButtons.forEach((button) => {
+    button.addEventListener("click", () => setLanguage(button.dataset.language));
+  });
+
+  if (heroImages.length > 0) {
+    setInterval(shuffleHeroWork, 4200);
+  }
 }
+
+initSite();
