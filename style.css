@@ -45,8 +45,7 @@ footer {
   gap: 14px;
   color: #f7f7f4;
   background:
-    linear-gradient(rgba(18, 19, 21, 0.88), rgba(18, 19, 21, 0.92)),
-    url("images/work/work-03.webp") center / cover;
+    linear-gradient(rgba(18, 19, 21, 0.88), rgba(18, 19, 21, 0.92));
   transition: opacity 0.35s ease, visibility 0.35s ease;
 }
 
