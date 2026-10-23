@@ -8,34 +8,24 @@
   <link rel="stylesheet" href="style.css">
   <title>TOTAL STUDIO</title>
 </head>
-<body class="is-loading">
-  <div id="site-loader" class="site-loader" role="status" aria-live="polite" aria-label="Loading portfolio">
-    <div class="loader-progress" aria-hidden="true">
-      <span id="loader-progress-bar"></span>
-    </div>
-    <p id="loader-progress-text">Loading portfolio 0%</p>
-  </div>
-
+<body>
   <nav>
     <div class="wrapper">
       <div class="logo"><a href="#home">TOTAL STUDIO</a></div>
-      <input type="radio" name="slider" id="menu-btn">
-      <input type="radio" name="slider" id="close-btn">
-      <ul class="nav-links">
-        <label for="close-btn" class="btn close-btn" aria-label="Close menu"><i class="fas fa-times"></i></label>
+      <ul class="nav-links" id="primary-navigation">
         <li><a href="#home" data-i18n="nav.home">Home</a></li>
         <li><a href="#about" data-i18n="nav.about">About</a></li>
         <li><a href="#services" data-i18n="nav.services">Services</a></li>
         <li><a href="#work" data-i18n="nav.work">Work</a></li>
         <li><a href="#contact" data-i18n="nav.contact">Contact</a></li>
         <li>
-          <div class="language-switcher" aria-label="Language selector">
+          <div class="language-switcher" role="group" aria-label="Language selector" data-i18n-aria-label="a11y.language">
             <button class="language-button is-active" type="button" data-language="en">EN</button>
             <button class="language-button" type="button" data-language="ro">RO</button>
           </div>
         </li>
       </ul>
-      <label for="menu-btn" class="btn menu-btn" aria-label="Open menu"><i class="fas fa-bars"></i></label>
+      <button id="menu-toggle" class="btn menu-btn" type="button" aria-controls="primary-navigation" aria-expanded="false" aria-label="Open menu" data-i18n-aria-label="a11y.openMenu"><span aria-hidden="true">☰</span></button>
     </div>
   </nav>
 
@@ -51,10 +41,10 @@
             <a class="button secondary" href="#contact" data-i18n="hero.contact">Contact Us</a>
           </div>
         </div>
-        <div class="hero-panel hero-showcase" aria-label="Total Studio sample advertising work">
-          <img class="hero-work hero-work-large" src="images/work/work-03.webp" alt="Packaging design sample" decoding="async" fetchpriority="high">
-          <img class="hero-work hero-work-small top" src="images/work/work-01.webp" alt="Window sticker design sample" decoding="async" fetchpriority="high">
-          <img class="hero-work hero-work-small bottom" src="images/work/work-02.webp" alt="Vehicle decal design sample" decoding="async" fetchpriority="high">
+        <div class="hero-panel hero-showcase" aria-label="Total Studio sample advertising work" data-i18n-aria-label="a11y.hero">
+          <img class="hero-work hero-work-large" src="images/work/work-03.webp" alt="Vodafone — Network campaign with child and chalk drawing" decoding="async" fetchpriority="high">
+          <img class="hero-work hero-work-small top" src="images/work/work-01.webp" alt="Vodafone — 5G and roaming campaign poster" decoding="async" fetchpriority="high">
+          <img class="hero-work hero-work-small bottom" src="images/work/work-02.webp" alt="Vodafone — Phone promotion window graphic" decoding="async" fetchpriority="high">
           <div class="hero-badge" data-i18n="hero.badge">Ads / Packaging / Decals</div>
         </div>
       </div>
@@ -135,27 +125,28 @@
               <i class="fas fa-phone"></i>
               <h3 data-i18n="contact.phone">Phone number</h3>
             </div>
-            <p>0745027807</p>
+            <p><a href="tel:+40745027807">0745 027 807</a></p>
           </div>
           <div class="contact-p-e-a-containers">
             <div class="contact-label">
               <i class="fas fa-envelope"></i>
               <h3 data-i18n="contact.email">Email</h3>
             </div>
-            <p>diverse_foto@yahoo.com</p>
+            <p><a href="mailto:diverse_foto@yahoo.com">diverse_foto@yahoo.com</a></p>
           </div>
           <div class="contact-p-e-a-containers">
             <div class="contact-label">
               <i class="fas fa-location-dot"></i>
               <h3 data-i18n="contact.address">Address</h3>
             </div>
-            <p>Str. Ariesul Mare 1 Bl. I5 Sc. A Et. 2 Ap. 9 Cod 060791</p>
+            <p><a href="https://www.google.com/maps/search/?api=1&amp;query=Strada%20Arie%C8%99ul%20Mare%201%2C%20060791%20Bucure%C8%99ti">Str. Arieșul Mare 1, Bl. I5, Sc. A, Et. 2, Ap. 9, București, 060791</a></p>
           </div>
         </div>
 
         <div class="map-container">
           <iframe
             class="map-frame"
+            title="Total Studio location in Bucharest" data-i18n-title="a11y.map"
             loading="lazy"
             allowfullscreen
             referrerpolicy="no-referrer-when-downgrade"
@@ -173,13 +164,14 @@
     </div>
   </footer>
 
-  <div id="media-lightbox" class="media-lightbox" aria-hidden="true" role="dialog" aria-label="Media preview">
-    <button class="lightbox-close" type="button" aria-label="Close preview">
-      <i class="fas fa-times"></i>
+  <dialog id="media-lightbox" class="media-lightbox" aria-label="Media preview" data-i18n-aria-label="a11y.preview">
+    <button class="lightbox-close" type="button" aria-label="Close preview" data-i18n-aria-label="a11y.closePreview">
+      <span aria-hidden="true">×</span>
     </button>
-    <img id="lightbox-image" src="" alt="">
-  </div>
+    <img id="lightbox-image" alt="">
+  </dialog>
 
+  <script src="gallery-assets.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

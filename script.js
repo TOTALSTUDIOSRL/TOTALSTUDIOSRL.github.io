@@ -1,21 +1,31 @@
-const closeMenu = document.querySelector("#close-btn");
+document.documentElement.classList.add("js-enabled");
+const menuToggle = document.querySelector("#menu-toggle");
+const navLinks = document.querySelector("#primary-navigation");
+const mobileNavigation = window.matchMedia("(max-width: 970px)");
 const heroImages = document.querySelectorAll(".hero-work");
 const languageButtons = document.querySelectorAll("[data-language]");
 const lightbox = document.querySelector("#media-lightbox");
 const lightboxImage = document.querySelector("#lightbox-image");
 const lightboxClose = document.querySelector(".lightbox-close");
-const siteLoader = document.querySelector("#site-loader");
-const loaderProgressBar = document.querySelector("#loader-progress-bar");
-const loaderProgressText = document.querySelector("#loader-progress-text");
-
 const previewLimit = 4;
-const preloadImageCount = 64;
-const preloadConcurrency = 8;
-const loaderFallbackDelay = 8000;
-let currentLanguage = localStorage.getItem("siteLanguage") || "en";
+let currentLanguage = "en";
+try {
+  currentLanguage = localStorage.getItem("siteLanguage") || "en";
+} catch {
+  // Language preferences are optional when browser storage is unavailable.
+}
+let lightboxTrigger = null;
 
 const translations = {
   en: {
+    "a11y.language": "Language selector",
+    "a11y.openMenu": "Open menu",
+    "a11y.closeMenu": "Close menu",
+    "a11y.hero": "Total Studio sample advertising work",
+    "a11y.preview": "Media preview",
+    "a11y.closePreview": "Close preview",
+    "a11y.openImage": "Open preview:",
+    "a11y.map": "Total Studio location in Bucharest",
     "nav.home": "Home",
     "nav.about": "About",
     "nav.services": "Services",
@@ -55,16 +65,16 @@ const translations = {
     "button.lessWork": "Show less work",
     "button.viewVideos": "View all videos",
     "button.lessVideos": "Show less videos",
-    "label.work": "Work",
-    "label.video": "Video ad",
-    "label.window": "Window sticker design",
-    "label.vehicle": "Vehicle decal design",
-    "label.packaging": "Packaging design",
-    "label.mall": "Mall advertising design",
-    "label.videoOne": "Window, car, bus, and mall ads",
-    "label.videoTwo": "Packaging, photos, posters, and short ads",
   },
   ro: {
+    "a11y.language": "Selectează limba",
+    "a11y.openMenu": "Deschide meniul",
+    "a11y.closeMenu": "Închide meniul",
+    "a11y.hero": "Exemple de lucrări publicitare Total Studio",
+    "a11y.preview": "Previzualizare imagine",
+    "a11y.closePreview": "Închide previzualizarea",
+    "a11y.openImage": "Deschide previzualizarea:",
+    "a11y.map": "Locația Total Studio în București",
     "nav.home": "Acasă",
     "nav.about": "Despre",
     "nav.services": "Servicii",
@@ -76,9 +86,9 @@ const translations = {
     "hero.contact": "Contactează-ne",
     "hero.badge": "Reclame / Ambalaje / Colantări",
     "about.eyebrow": "(Ce facem)",
-    "about.title": "Design pregătit pentru suprafețe reale, spații reale si lucrări reale de tipar.",
+    "about.title": "Design pregătit pentru suprafețe reale, spații reale și lucrări reale de tipar.",
     "about.textOne": "Total Studio creează materiale vizuale curate și practice pentru firme care au nevoie de reclame pregătite pentru tipar sau publicare.",
-    "about.textTwo": "Studioul poate realiza stickere pentru vitrine, colantari pentru mașini și autobuze, reclame pentru mall-uri, ambalaje, postere și reclame video scurte.",
+    "about.textTwo": "Studioul poate realiza stickere pentru vitrine, colantări pentru mașini și autobuze, reclame pentru mall-uri, ambalaje, postere și reclame video scurte.",
     "services.eyebrow": "(Servicii)",
     "services.title": "Lucrări creative pentru nevoi reale de business.",
     "services.printTitle": "Reclame printate",
@@ -89,187 +99,110 @@ const translations = {
     "services.videoText": "Fotografiere de produse, postere realizate din reclame, stickere pentru vitrine din reclame complete și clipuri video simple.",
     "work.eyebrow": "(Lucrări publicitare)",
     "work.title": "Designuri pregătite pentru tipar, afișare și promovare.",
-    "work.empty": "Nu există înca imagini cu lucrări.",
+    "work.empty": "Nu există încă imagini cu lucrări.",
     "videos.eyebrow": "(Mostre de reclame scurte)",
     "videos.title": "Reclame animate simple pentru folosire online.",
-    "videos.empty": "Nu exista inca reclame video.",
+    "videos.empty": "Nu există încă reclame video.",
     "contact.eyebrow": "(Contact)",
     "contact.title": "Hai să vorbim.",
     "contact.text": "Ai o idee pentru reclamă, ambalaj, poster, sticker, colantare sau video simplu? Trimite un mesaj sau sună-ne și stabilim următorul pas.",
     "contact.phone": "Număr de telefon",
     "contact.email": "Email",
-    "contact.address": "Adresa",
+    "contact.address": "Adresă",
     "footer.rights": "© 2026 Total Studio. Toate drepturile rezervate.",
     "button.viewWork": "Vezi toate lucrările",
     "button.lessWork": "Arată mai puține lucrări",
     "button.viewVideos": "Vezi toate videourile",
     "button.lessVideos": "Arată mai puține videouri",
-    "label.work": "Lucrare",
-    "label.video": "Reclamă video",
-    "label.window": "Design sticker vitrină",
-    "label.vehicle": "Design colantare vehicul",
-    "label.packaging": "Design ambalaj",
-    "label.mall": "Design reclamă mall",
-    "label.videoOne": "Reclame pentru vitrine, mașini, autobuze și mall-uri",
-    "label.videoTwo": "Ambalaje, fotografii, postere și reclame scurte",
   },
 };
 
 const workConfig = {
-  folder: "images/work",
-  prefix: "work",
-  extensions: ["webp", "jpg", "jpeg", "png"],
-  maxItems: 80,
-  stopAfterMisses: 4,
+  assets: galleryAssets.work,
   gallerySelector: "#work-gallery",
   emptySelector: "#work-empty",
   buttonSelector: "#work-view-all",
   cardClass: "work-card",
-  labelPrefixKey: "label.work",
-  mediaType: "image",
   viewAllKey: "button.viewWork",
   showLessKey: "button.lessWork",
-  labels: [
-    "label.window",
-    "label.vehicle",
-    "label.packaging",
-    "label.mall",
-  ],
 };
 
 const videoConfig = {
-  folder: "images/videos",
-  prefix: "video",
-  extensions: ["gif"],
-  maxItems: 80,
-  stopAfterMisses: 4,
+  assets: galleryAssets.videos,
   gallerySelector: "#video-gallery",
   emptySelector: "#video-empty",
   buttonSelector: "#video-view-all",
   cardClass: "video-card",
-  labelPrefixKey: "label.video",
-  mediaType: "image",
   viewAllKey: "button.viewVideos",
   showLessKey: "button.lessVideos",
-  labels: [
-    "label.videoOne",
-    "label.videoTwo",
-  ],
 };
 
-let heroWorkImages = [];
+// Rotate only preview assets; the rest stay unloaded until they are near the viewport.
+const heroWorkImages = galleryAssets.work.slice(0, previewLimit);
+const assetBySrc = new Map([...galleryAssets.work, ...galleryAssets.videos].map(asset => [asset.src, asset]));
+
+function assetTitle(asset) {
+  return asset?.title[currentLanguage] || asset?.title.en || "";
+}
 
 function itemTitle(config, fileNumber) {
-  const language = translations[currentLanguage] || translations.en;
-  const labelKey = config.labels[fileNumber - 1];
-
-  if (labelKey && language[labelKey]) {
-    return language[labelKey];
-  }
-
-  return `${language[config.labelPrefixKey]} ${String(fileNumber).padStart(2, "0")}`;
+  return assetTitle(config.assets[fileNumber - 1]);
 }
 
 function translate(key) {
   return translations[currentLanguage]?.[key] || translations.en[key] || "";
 }
 
-function updateLoaderProgress(loaded, total) {
-  if (!loaderProgressBar || !loaderProgressText) {
-    return;
-  }
+const mediaObserver = "IntersectionObserver" in window
+  ? new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const image = entry.target;
+          image.src = image.dataset.src;
+          mediaObserver.unobserve(image);
+        }
+      });
+    }, { rootMargin: "200px" })
+  : null;
 
-  const progress = total > 0 ? Math.round((loaded / total) * 100) : 100;
-  loaderProgressBar.style.width = `${progress}%`;
-  loaderProgressText.textContent = `Loading portfolio ${progress}%`;
-}
-
-function preloadImage(src) {
-  return new Promise((resolve) => {
-    const image = new Image();
-    image.onload = () => resolve(true);
-    image.onerror = () => resolve(false);
-    image.src = src;
-  });
-}
-
-async function preloadPortfolioImages() {
-  const total = Math.min(preloadImageCount, workConfig.maxItems);
-  let loaded = 0;
-  let nextIndex = 1;
-
-  updateLoaderProgress(loaded, total);
-
-  async function preloadNextImage() {
-    while (nextIndex <= total) {
-      const fileNumber = String(nextIndex).padStart(2, "0");
-      nextIndex += 1;
-
-      await preloadImage(`${workConfig.folder}/${workConfig.prefix}-${fileNumber}.webp`);
-      loaded += 1;
-      updateLoaderProgress(loaded, total);
-    }
-  }
-
-  const workers = Array.from(
-    { length: Math.min(preloadConcurrency, total) },
-    () => preloadNextImage()
-  );
-
-  await Promise.all(workers);
-}
-
-function revealSite() {
-  updateLoaderProgress(1, 1);
-  document.body.classList.remove("is-loading");
-
-  if (!siteLoader) {
-    return;
-  }
-
-  window.setTimeout(() => {
-    siteLoader.hidden = true;
-  }, 450);
-}
-
-async function waitForPortfolioPreload() {
-  let timeoutId;
-  const fallback = new Promise((resolve) => {
-    timeoutId = window.setTimeout(resolve, loaderFallbackDelay);
-  });
-
-  await Promise.race([preloadPortfolioImages(), fallback]);
-  window.clearTimeout(timeoutId);
-}
-
-function createMediaCard(config, src, fileNumber) {
-  const title = itemTitle(config, fileNumber);
+function createMediaCard(config, asset, fileNumber) {
   const figure = document.createElement("figure");
   figure.className = config.cardClass;
   figure.dataset.order = fileNumber;
+  figure.dataset.aspect = asset.width / asset.height;
   figure.dataset.previewItem = fileNumber > previewLimit ? "extra" : "visible";
 
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "media-preview";
+  button.dataset.titleNumber = fileNumber;
+  button.dataset.titleConfig = config.gallerySelector;
+  button.setAttribute("aria-label", `${translate("a11y.openImage")} ${assetTitle(asset)}`);
+  button.setAttribute("aria-haspopup", "dialog");
+  button.setAttribute("aria-controls", "media-lightbox");
+
   const image = document.createElement("img");
-  image.alt = `${title} sample`;
+  image.alt = assetTitle(asset);
   image.dataset.titleNumber = fileNumber;
   image.dataset.titleConfig = config.gallerySelector;
+  image.dataset.src = asset.src;
+  image.width = asset.width;
+  image.height = asset.height;
   image.loading = "lazy";
   image.decoding = "async";
-  image.addEventListener("load", () => {
-    if (config.gallerySelector === "#work-gallery" || config.gallerySelector === "#video-gallery") {
-      figure.dataset.aspect = image.naturalWidth / image.naturalHeight;
-      figure.dataset.pixels = image.naturalWidth * image.naturalHeight;
-      layoutPuzzleGallery(config.gallerySelector);
-    }
-  });
-  image.src = src;
+  button.appendChild(image);
+  figure.appendChild(button);
+  button.addEventListener("click", () => openLightbox(asset, button));
 
-  figure.appendChild(image);
-  figure.addEventListener("click", () => openLightbox(src, `${title} sample`));
+  if (mediaObserver) {
+    mediaObserver.observe(image);
+  } else {
+    image.src = asset.src;
+  }
 
   if (config.gallerySelector === "#video-gallery") {
     const caption = document.createElement("figcaption");
-    caption.textContent = title;
+    caption.textContent = assetTitle(asset);
     caption.dataset.titleNumber = fileNumber;
     caption.dataset.titleConfig = config.gallerySelector;
     figure.appendChild(caption);
@@ -278,28 +211,36 @@ function createMediaCard(config, src, fileNumber) {
   return figure;
 }
 
-function openLightbox(src, altText) {
-  if (!lightbox || !lightboxImage) {
-    return;
-  }
-
-  lightboxImage.src = src;
-  lightboxImage.alt = altText;
+function openLightbox(asset, trigger) {
+  if (!lightbox || !lightboxImage) return;
+  setMenuOpen(false);
+  lightboxTrigger = trigger || document.activeElement;
+  lightboxImage.src = asset.src;
+  lightboxImage.alt = assetTitle(asset);
+  lightboxImage.dataset.assetSrc = asset.src;
   lightbox.classList.add("is-open");
-  lightbox.setAttribute("aria-hidden", "false");
   document.body.classList.add("lightbox-open");
+  if (!lightbox.open) lightbox.showModal();
+  lightboxClose.focus();
 }
 
 function closeLightbox() {
-  if (!lightbox || !lightboxImage) {
-    return;
+  if (lightbox?.open) {
+    lightbox.close();
+    resetLightbox();
   }
+}
 
+function resetLightbox() {
+  // A queued close event may arrive after the user has opened another preview.
+  if (lightbox.open) return;
   lightbox.classList.remove("is-open");
-  lightbox.setAttribute("aria-hidden", "true");
   document.body.classList.remove("lightbox-open");
-  lightboxImage.src = "";
+  lightboxImage.removeAttribute("src");
   lightboxImage.alt = "";
+  delete lightboxImage.dataset.assetSrc;
+  if (lightboxTrigger?.isConnected) lightboxTrigger.focus({ preventScroll: true });
+  lightboxTrigger = null;
 }
 
 function updateViewAllButton(gallery, button) {
@@ -313,6 +254,7 @@ function updateViewAllButton(gallery, button) {
   button.hidden = false;
   button.addEventListener("click", () => {
     const isExpanded = gallery.classList.toggle("is-expanded");
+    button.setAttribute("aria-expanded", String(isExpanded));
     button.textContent = isExpanded ? translate(button.dataset.showLessKey) : translate(button.dataset.viewAllKey);
     layoutPuzzleGallery(gallery.id === "video-gallery" ? "#video-gallery" : "#work-gallery");
 
@@ -322,87 +264,23 @@ function updateViewAllButton(gallery, button) {
   });
 }
 
-function runWhenIdle(callback) {
-  if ("requestIdleCallback" in window) {
-    window.requestIdleCallback(callback, { timeout: 1200 });
-    return;
-  }
-
-  window.setTimeout(callback, 200);
-}
-
-function findMediaFile(config, fileNumber, extensionIndex = 0) {
-  return new Promise((resolve) => {
-    if (extensionIndex >= config.extensions.length) {
-      resolve(null);
-      return;
-    }
-
-    const paddedNumber = String(fileNumber).padStart(2, "0");
-    const src = `${config.folder}/${config.prefix}-${paddedNumber}.${config.extensions[extensionIndex]}`;
-    const image = new Image();
-
-    image.onload = () => resolve(src);
-    image.onerror = () => resolve(findMediaFile(config, fileNumber, extensionIndex + 1));
-    image.src = src;
-  });
-}
-
-async function appendMediaItem(config, gallery, emptyGallery, fileNumber) {
-  const src = await findMediaFile(config, fileNumber);
-
-  if (!src) {
-    return false;
-  }
-
-  gallery.appendChild(createMediaCard(config, src, fileNumber));
-  emptyGallery.classList.add("is-hidden");
-
-  if (config.gallerySelector === "#work-gallery") {
-    heroWorkImages.push(src);
-    seedHeroImages();
-  }
-
-  return true;
-}
-
-async function loadGallery(config) {
+function loadGallery(config) {
   const gallery = document.querySelector(config.gallerySelector);
   const emptyGallery = document.querySelector(config.emptySelector);
   const viewAllButton = document.querySelector(config.buttonSelector);
-
-  if (!gallery || !emptyGallery || !viewAllButton) {
-    return;
-  }
+  if (!gallery || !emptyGallery || !viewAllButton) return;
 
   viewAllButton.dataset.viewAllKey = config.viewAllKey;
   viewAllButton.dataset.showLessKey = config.showLessKey;
   viewAllButton.textContent = translate(config.viewAllKey);
-
-  let consecutiveMisses = 0;
-
-  for (let index = 1; index <= Math.min(previewLimit, config.maxItems); index += 1) {
-    const found = await appendMediaItem(config, gallery, emptyGallery, index);
-    consecutiveMisses = found ? 0 : consecutiveMisses + 1;
-  }
-
-  layoutPuzzleGallery(config.gallerySelector);
-
-  runWhenIdle(async () => {
-    for (let index = previewLimit + 1; index <= config.maxItems; index += 1) {
-      const found = await appendMediaItem(config, gallery, emptyGallery, index);
-      consecutiveMisses = found ? 0 : consecutiveMisses + 1;
-
-      if (consecutiveMisses >= config.stopAfterMisses) {
-        break;
-      }
-    }
-
-    updateViewAllButton(gallery, viewAllButton);
-    layoutPuzzleGallery(config.gallerySelector);
-  });
-
+  viewAllButton.setAttribute("aria-controls", gallery.id);
+  viewAllButton.setAttribute("aria-expanded", "false");
+  const fragment = document.createDocumentFragment();
+  config.assets.forEach((asset, index) => fragment.appendChild(createMediaCard(config, asset, index + 1)));
+  gallery.appendChild(fragment);
+  emptyGallery.classList.toggle("is-hidden", config.assets.length > 0);
   updateViewAllButton(gallery, viewAllButton);
+  layoutPuzzleGallery(config.gallerySelector);
 }
 
 function visibleWorkCards() {
@@ -544,7 +422,9 @@ function refreshGeneratedText() {
     const title = itemTitle(config, fileNumber);
 
     if (element.tagName.toLowerCase() === "img") {
-      element.alt = `${title} sample`;
+      element.alt = title;
+    } else if (element.tagName.toLowerCase() === "button") {
+      element.setAttribute("aria-label", `${translate("a11y.openImage")} ${title}`);
     } else {
       element.textContent = title;
     }
@@ -567,7 +447,11 @@ function refreshGeneratedText() {
 
 function setLanguage(language) {
   currentLanguage = translations[language] ? language : "en";
-  localStorage.setItem("siteLanguage", currentLanguage);
+  try {
+    localStorage.setItem("siteLanguage", currentLanguage);
+  } catch {
+    // Keep language switching functional without persistent storage.
+  }
   document.documentElement.lang = currentLanguage;
 
   document.querySelectorAll("[data-i18n]").forEach((element) => {
@@ -578,33 +462,72 @@ function setLanguage(language) {
     button.classList.toggle("is-active", button.dataset.language === currentLanguage);
   });
 
+  document.querySelectorAll("[data-i18n-aria-label]").forEach(element => {
+    element.setAttribute("aria-label", translate(element.dataset.i18nAriaLabel));
+  });
+  document.querySelectorAll("[data-i18n-title]").forEach(element => {
+    element.title = translate(element.dataset.i18nTitle);
+  });
+  languageButtons.forEach(button => button.setAttribute("aria-pressed", String(button.dataset.language === currentLanguage)));
+  heroImages.forEach(image => image.alt = assetTitle(assetBySrc.get(image.getAttribute("src"))));
+  if (lightboxImage?.dataset.assetSrc) lightboxImage.alt = assetTitle(assetBySrc.get(lightboxImage.dataset.assetSrc));
   refreshGeneratedText();
 }
 
-document.querySelectorAll(".nav-links a").forEach((link) => {
+function setMenuOpen(open, returnFocus = false) {
+  if (!menuToggle || !navLinks) return;
+  const expanded = mobileNavigation.matches && open;
+  navLinks.classList.toggle("is-open", expanded);
+  navLinks.inert = mobileNavigation.matches && !expanded;
+  if (navLinks.inert) navLinks.setAttribute("aria-hidden", "true");
+  else navLinks.removeAttribute("aria-hidden");
+  menuToggle.setAttribute("aria-expanded", String(expanded));
+  menuToggle.dataset.i18nAriaLabel = expanded ? "a11y.closeMenu" : "a11y.openMenu";
+  menuToggle.setAttribute("aria-label", translate(menuToggle.dataset.i18nAriaLabel));
+  menuToggle.querySelector("span").textContent = expanded ? "×" : "☰";
+  if (expanded) navLinks.querySelector("a").focus();
+  else if (returnFocus) menuToggle.focus();
+}
+
+menuToggle?.addEventListener("click", () => setMenuOpen(menuToggle.getAttribute("aria-expanded") !== "true", true));
+mobileNavigation.addEventListener("change", () => {
+  const focusWasInMenu = navLinks?.contains(document.activeElement);
+  setMenuOpen(false, mobileNavigation.matches && focusWasInMenu);
+});
+document.querySelectorAll(".nav-links a").forEach(link => {
   link.addEventListener("click", () => {
-    if (closeMenu) {
-      closeMenu.checked = true;
+    setMenuOpen(false);
+    const section = document.querySelector(link.getAttribute("href"));
+    if (section) {
+      section.tabIndex = -1;
+      window.requestAnimationFrame(() => section.focus({ preventScroll: true }));
     }
   });
 });
+document.addEventListener("click", event => {
+  if (menuToggle?.getAttribute("aria-expanded") === "true" && !event.target.closest("nav")) setMenuOpen(false);
+});
 
 if (lightbox) {
-  lightbox.addEventListener("click", (event) => {
-    if (event.target === lightbox) {
-      closeLightbox();
+  lightbox.addEventListener("click", event => {
+    if (event.target === lightbox) closeLightbox();
+  });
+  lightbox.addEventListener("cancel", event => {
+    event.preventDefault();
+    closeLightbox();
+  });
+  lightbox.addEventListener("close", resetLightbox);
+  lightbox.addEventListener("keydown", event => {
+    if (event.key === "Tab") {
+      // The close button is the dialog's only interactive control.
+      event.preventDefault();
+      lightboxClose.focus();
     }
   });
 }
-
-if (lightboxClose) {
-  lightboxClose.addEventListener("click", closeLightbox);
-}
-
-document.addEventListener("keydown", (event) => {
-  if (event.key === "Escape") {
-    closeLightbox();
-  }
+lightboxClose?.addEventListener("click", closeLightbox);
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape" && menuToggle?.getAttribute("aria-expanded") === "true") setMenuOpen(false, true);
 });
 
 window.addEventListener("resize", () => {
@@ -622,7 +545,9 @@ function shuffleHeroWork() {
   heroImages.forEach((image, index) => {
     image.style.opacity = "0";
     setTimeout(() => {
-      image.src = shuffled[index % shuffled.length];
+      const asset = shuffled[index % shuffled.length];
+      image.src = asset.src;
+      image.alt = assetTitle(asset);
       image.style.opacity = "1";
     }, 260);
   });
@@ -634,14 +559,16 @@ function seedHeroImages() {
   }
 
   heroImages.forEach((image, index) => {
-    image.src = heroWorkImages[index % heroWorkImages.length];
+    const asset = assetBySrc.get(image.getAttribute("src")) || heroWorkImages[index % heroWorkImages.length];
+    image.src = asset.src;
+    image.alt = assetTitle(asset);
   });
 }
 
-async function initSite() {
+function initSite() {
   setLanguage(currentLanguage);
-  await waitForPortfolioPreload();
-  revealSite();
+  setMenuOpen(false);
+  seedHeroImages();
 
   loadGallery(workConfig);
   loadGallery(videoConfig);
