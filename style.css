@@ -755,13 +755,19 @@ body.lightbox-open {
   .work-gallery,
   .video-grid {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .work-card {
     width: auto;
     height: auto;
-    min-height: 260px;
-    aspect-ratio: 4 / 3;
+    min-width: 0;
+  }
+
+  .work-card img {
+    display: block;
+    height: auto;
+    object-fit: contain;
   }
 
   .video-card {

@@ -246,6 +246,7 @@ function createMediaCard(config, src, fileNumber) {
   const title = itemTitle(config, fileNumber);
   const figure = document.createElement("figure");
   figure.className = config.cardClass;
+  figure.dataset.order = fileNumber;
   figure.dataset.previewItem = fileNumber > previewLimit ? "extra" : "visible";
 
   const image = document.createElement("img");
@@ -421,14 +422,38 @@ function applyPuzzleRow(row, rowWidth, gap, isLastRow = false) {
     ? Math.min(390, Math.max(230, usableWidth / Math.max(aspectSum, 1)))
     : usableWidth / Math.max(aspectSum, 1);
 
-  row.forEach((card) => {
-    const aspect = Number(card.dataset.aspect || 1);
-    card.style.width = `${Math.round(rowHeight * aspect)}px`;
+  const widths = row.map((card) => Math.floor(rowHeight * Number(card.dataset.aspect || 1)));
+  const occupiedWidth = widths.reduce((sum, width) => sum + width, 0);
+  const targetWidth = isLastRow
+    ? Math.min(Math.floor(usableWidth), Math.round(rowHeight * aspectSum))
+    : Math.floor(usableWidth);
+  const remainingPixels = Math.max(0, targetWidth - occupiedWidth);
+
+  row.forEach((card, index) => {
+    card.style.width = `${widths[index] + (index < remainingPixels ? 1 : 0)}px`;
     card.style.height = `${Math.round(rowHeight)}px`;
   });
 }
 
+const pendingGalleryLayouts = new Set();
+let galleryLayoutFrame = null;
+
 function layoutPuzzleGallery(selector) {
+  pendingGalleryLayouts.add(selector);
+
+  if (galleryLayoutFrame !== null) {
+    return;
+  }
+
+  galleryLayoutFrame = window.requestAnimationFrame(() => {
+    galleryLayoutFrame = null;
+    const selectors = [...pendingGalleryLayouts];
+    pendingGalleryLayouts.clear();
+    selectors.forEach(performPuzzleGalleryLayout);
+  });
+}
+
+function performPuzzleGalleryLayout(selector) {
   const gallery = document.querySelector(selector);
 
   if (!gallery) {
@@ -473,6 +498,9 @@ function layoutPuzzleGallery(selector) {
 }
 
 function arrangePuzzleCards(cards) {
+  const currentOrder = cards;
+  // Always start from file order, so repeated layouts produce the same sequence.
+  cards = [...cards].sort((a, b) => Number(a.dataset.order) - Number(b.dataset.order));
   const wide = cards.filter((card) => Number(card.dataset.aspect || 1) >= 1.55);
   const tall = cards.filter((card) => Number(card.dataset.aspect || 1) <= 0.8);
   const normal = cards.filter((card) => {
@@ -496,7 +524,12 @@ function arrangePuzzleCards(cards) {
     }
   }
 
-  arranged.forEach((card) => card.parentElement.appendChild(card));
+  if (arranged.some((card, index) => card !== currentOrder[index])) {
+    const gallery = arranged[0].parentElement;
+    const fragment = document.createDocumentFragment();
+    arranged.forEach((card) => fragment.appendChild(card));
+    gallery.appendChild(fragment);
+  }
   return arranged;
 }
 
