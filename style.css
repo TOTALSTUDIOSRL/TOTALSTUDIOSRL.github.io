@@ -368,6 +368,73 @@ p {
   gap: 18px;
 }
 
+.work-filters {
+  scroll-margin-top: 94px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 18px;
+  margin-bottom: 28px;
+  padding: 22px;
+  background: #ffffff;
+  border: 1px solid #deded9;
+  border-radius: 8px;
+}
+
+.work-filters[hidden],
+.work-card[hidden] {
+  display: none;
+}
+
+.work-filters label {
+  display: grid;
+  flex: 1 1 180px;
+  min-width: 0;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.work-filters .work-search {
+  flex-grow: 2;
+}
+
+.work-filters select,
+.work-filters input,
+.work-filter-reset {
+  width: 100%;
+  min-width: 0;
+  min-height: 48px;
+  padding: 12px;
+  color: #18191b;
+  background: #ffffff;
+  border: 1px solid #bcbcb7;
+  border-radius: 5px;
+  font: inherit;
+}
+
+.work-filters select:focus-visible,
+.work-filters input:focus-visible {
+  outline: 3px solid #377ee8;
+  outline-offset: 3px;
+}
+
+.work-filter-reset {
+  width: auto;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.work-filter-reset:hover {
+  background: #f7f7f4;
+}
+
+.work-count {
+  flex-basis: 100%;
+  font-size: 13px;
+  color: #555555;
+}
+
 .work-card {
   flex: 0 0 auto;
   overflow: hidden;

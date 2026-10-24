@@ -8,9 +8,11 @@ const lightbox = document.querySelector("#media-lightbox");
 const lightboxImage = document.querySelector("#lightbox-image");
 const lightboxClose = document.querySelector(".lightbox-close");
 const previewLimit = 4;
-let currentLanguage = "en";
+let workPreviewRotation = null;
+let workFilters = null;
+let currentLanguage = "ro";
 try {
-  currentLanguage = localStorage.getItem("siteLanguage") || "en";
+  currentLanguage = localStorage.getItem("siteLanguage") || "ro";
 } catch {
   // Language preferences are optional when browser storage is unavailable.
 }
@@ -31,40 +33,48 @@ const translations = {
     "nav.services": "Services",
     "nav.work": "Work",
     "nav.contact": "Contact",
-    "hero.eyebrow": "(Design studio)",
-    "hero.text": "Print-ready advertising design for windows, cars, buses, malls, packaging, posters, and simple video ads.",
+    "hero.eyebrow": "Design studio",
+    "hero.text": "We design advertising, packaging, and vehicle graphics. We prepare artwork for print and create short videos for online use.",
     "hero.viewWork": "View Work",
-    "hero.contact": "Contact Us",
+    "hero.contact": "Let’s talk",
     "hero.badge": "Ads / Packaging / Decals",
-    "about.eyebrow": "(What we do)",
-    "about.title": "Design prepared for real surfaces, real spaces, and real print jobs.",
-    "about.textOne": "Total Studio creates clean, practical visuals for firms that need ads prepared before printing or publishing.",
-    "about.textTwo": "The studio can design window stickers, car and bus decals, mall ads, product packages, posters, and simple short video ads.",
-    "services.eyebrow": "(Services)",
-    "services.title": "Creative work for real business needs.",
-    "services.printTitle": "Print Ads",
-    "services.printText": "Window stickers, decals for cars and buses, mall visuals, outdoor ads, and posters.",
+    "about.eyebrow": "About us",
+    "about.title": "From the first idea to the print-ready file.",
+    "about.textOne": "We’re Total Studio. We help you design and prepare artwork for print or online publishing.",
+    "about.textTwo": "We work on projects for shop windows, cars, buses, and retail spaces, as well as packaging, posters, and short videos.",
+    "services.eyebrow": "Services",
+    "services.title": "How we can help",
+    "services.printTitle": "Graphics for print",
+    "services.printText": "Design for posters, stickers, shop windows, vehicle graphics, and billboards.",
     "services.packagingTitle": "Packaging",
-    "services.packagingText": "Design for bottles, boxes, medicine creams, pills, labels, and other package formats.",
-    "services.videoTitle": "Photo & Video Ads",
-    "services.videoText": "Product photography, posters made from ads, window stickers from full ads, and short simple video ads.",
-    "work.eyebrow": "(Advertising work)",
-    "work.title": "Designs ready for print, display, and promotion.",
-    "work.empty": "No work images found yet.",
-    "videos.eyebrow": "(Short ad samples)",
-    "videos.title": "Simple animated ads for online use.",
-    "videos.empty": "No video ads found yet.",
-    "contact.eyebrow": "(Reach out)",
+    "services.packagingText": "Packaging and label design for boxes, bottles, cosmetics, pharmaceutical products, and more.",
+    "services.videoTitle": "Photo and video",
+    "services.videoText": "We photograph products, adapt advertisements to the formats you need, and create short videos.",
+    "work.eyebrow": "Work",
+    "work.title": "A few projects we’ve worked on",
+    "work.empty": "We’ll be adding new work soon.",
+    "videos.eyebrow": "Video",
+    "videos.title": "Advertising in motion",
+    "videos.empty": "We’ll be adding new videos soon.",
+    "contact.eyebrow": "Contact",
     "contact.title": "Let's talk.",
-    "contact.text": "Have an ad, package, poster, sticker, decal, or simple video idea in mind? Send a message or call and we can figure out the next step.",
-    "contact.phone": "Phone number",
+    "contact.text": "Tell us what you have in mind. Email or call us, and we’ll see how we can help.",
+    "contact.phone": "Phone",
     "contact.email": "Email",
     "contact.address": "Address",
     "footer.rights": "© 2026 Total Studio. All rights reserved.",
-    "button.viewWork": "View all work",
-    "button.lessWork": "Show less work",
+    "work.filters": "Portfolio filters",
+    "work.category": "Category",
+    "work.brand": "Brand",
+    "work.search": "Search brand, project or year",
+    "work.reset": "Reset",
+    "work.showAll": "Show all",
+    "work.noResults": "No results. Try different filters or reset your search.",
+    "work.count": "{count} of {total} works",
+    "button.viewWork": "Show more work",
+    "button.lessWork": "View fewer projects",
     "button.viewVideos": "View all videos",
-    "button.lessVideos": "Show less videos",
+    "button.lessVideos": "View fewer videos",
   },
   ro: {
     "a11y.language": "Selectează limba",
@@ -80,40 +90,48 @@ const translations = {
     "nav.services": "Servicii",
     "nav.work": "Lucrări",
     "nav.contact": "Contact",
-    "hero.eyebrow": "(Studio de design)",
-    "hero.text": "Design publicitar pregătit pentru tipar: vitrine, mașini, autobuze, mall-uri, ambalaje, postere și reclame video simple.",
+    "hero.eyebrow": "Studio de design",
+    "hero.text": "Facem grafică pentru reclame, ambalaje și colantări. Pregătim materialele pentru tipar și creăm clipuri scurte pentru online.",
     "hero.viewWork": "Vezi lucrări",
-    "hero.contact": "Contactează-ne",
+    "hero.contact": "Hai să vorbim",
     "hero.badge": "Reclame / Ambalaje / Colantări",
-    "about.eyebrow": "(Ce facem)",
-    "about.title": "Design pregătit pentru suprafețe reale, spații reale și lucrări reale de tipar.",
-    "about.textOne": "Total Studio creează materiale vizuale curate și practice pentru firme care au nevoie de reclame pregătite pentru tipar sau publicare.",
-    "about.textTwo": "Studioul poate realiza stickere pentru vitrine, colantări pentru mașini și autobuze, reclame pentru mall-uri, ambalaje, postere și reclame video scurte.",
-    "services.eyebrow": "(Servicii)",
-    "services.title": "Lucrări creative pentru nevoi reale de business.",
-    "services.printTitle": "Reclame printate",
-    "services.printText": "Stickere pentru vitrine, colantări pentru mașini și autobuze, materiale pentru mall-uri, reclame outdoor și postere.",
+    "about.eyebrow": "Despre noi",
+    "about.title": "De la idee la fișierul gata de tipar.",
+    "about.textOne": "Suntem Total Studio. Te ajutăm cu designul și pregătirea materialelor pentru tipar sau publicare online.",
+    "about.textTwo": "Lucrăm la proiecte pentru vitrine, mașini, autobuze și spații comerciale, dar și la ambalaje, afișe și clipuri scurte.",
+    "services.eyebrow": "Servicii",
+    "services.title": "Cu ce te putem ajuta",
+    "services.printTitle": "Grafică pentru tipar",
+    "services.printText": "Design pentru afișe, autocolante, vitrine, colantări auto și panouri publicitare.",
     "services.packagingTitle": "Ambalaje",
-    "services.packagingText": "Design pentru sticle, cutii, creme medicinale, pastile, etichete și alte formate de ambalaj.",
-    "services.videoTitle": "Foto și reclame video",
-    "services.videoText": "Fotografiere de produse, postere realizate din reclame, stickere pentru vitrine din reclame complete și clipuri video simple.",
-    "work.eyebrow": "(Lucrări publicitare)",
-    "work.title": "Designuri pregătite pentru tipar, afișare și promovare.",
-    "work.empty": "Nu există încă imagini cu lucrări.",
-    "videos.eyebrow": "(Mostre de reclame scurte)",
-    "videos.title": "Reclame animate simple pentru folosire online.",
-    "videos.empty": "Nu există încă reclame video.",
-    "contact.eyebrow": "(Contact)",
+    "services.packagingText": "Design de ambalaje și etichete pentru cutii, sticle, cosmetice, produse farmaceutice și altele.",
+    "services.videoTitle": "Foto și video",
+    "services.videoText": "Fotografiem produse, adaptăm reclamele la formatele de care ai nevoie și creăm clipuri scurte.",
+    "work.eyebrow": "Lucrări",
+    "work.title": "Câteva proiecte la care am lucrat",
+    "work.empty": "Adăugăm în curând lucrări noi.",
+    "videos.eyebrow": "Video",
+    "videos.title": "Reclame în mișcare",
+    "videos.empty": "Adăugăm în curând clipuri noi.",
+    "contact.eyebrow": "Contact",
     "contact.title": "Hai să vorbim.",
-    "contact.text": "Ai o idee pentru reclamă, ambalaj, poster, sticker, colantare sau video simplu? Trimite un mesaj sau sună-ne și stabilim următorul pas.",
-    "contact.phone": "Număr de telefon",
+    "contact.text": "Spune-ne ce ai în minte. Scrie-ne sau sună-ne și vedem cum te putem ajuta.",
+    "contact.phone": "Telefon",
     "contact.email": "Email",
     "contact.address": "Adresă",
     "footer.rights": "© 2026 Total Studio. Toate drepturile rezervate.",
-    "button.viewWork": "Vezi toate lucrările",
-    "button.lessWork": "Arată mai puține lucrări",
-    "button.viewVideos": "Vezi toate videourile",
-    "button.lessVideos": "Arată mai puține videouri",
+    "work.filters": "Filtre portofoliu",
+    "work.category": "Categorie",
+    "work.brand": "Brand",
+    "work.search": "Caută brand, proiect sau an",
+    "work.reset": "Resetează",
+    "work.showAll": "Arată toate",
+    "work.noResults": "Niciun rezultat. Încearcă alte filtre sau resetează căutarea.",
+    "work.count": "{count} din {total} lucrări",
+    "button.viewWork": "Vezi mai multe lucrări",
+    "button.lessWork": "Vezi mai puține lucrări",
+    "button.viewVideos": "Vezi toate clipurile",
+    "button.lessVideos": "Vezi mai puține clipuri",
   },
 };
 
@@ -137,8 +155,10 @@ const videoConfig = {
   showLessKey: "button.lessVideos",
 };
 
-// Rotate only preview assets; the rest stay unloaded until they are near the viewport.
-const heroWorkImages = galleryAssets.work.slice(0, previewLimit);
+// Choose from all main projects, loading only the next visible batch.
+const heroWorkImages = galleryAssets.work.filter(asset => !asset.role || asset.role === "project");
+let heroQueue = [];
+let heroRotationPending = false;
 const assetBySrc = new Map([...galleryAssets.work, ...galleryAssets.videos].map(asset => [asset.src, asset]));
 
 function assetTitle(asset) {
@@ -153,12 +173,44 @@ function translate(key) {
   return translations[currentLanguage]?.[key] || translations.en[key] || "";
 }
 
+function updateResponsiveSize(image) {
+  if (!image.dataset.srcset && !image.hasAttribute("srcset")) return;
+  const width = Math.ceil(image.getBoundingClientRect().width);
+  if (width > 0) image.sizes = `${width}px`;
+}
+
+function loadResponsiveImage(image) {
+  if (image.dataset.srcset) {
+    updateResponsiveSize(image);
+    image.srcset = image.dataset.srcset;
+  }
+  image.src = image.dataset.src;
+}
+
+function preloadResponsiveAsset(asset, width) {
+  const image = new Image();
+  image.sizes = `${Math.ceil(width)}px`;
+  if (asset.srcSet) image.srcset = asset.srcSet;
+  image.src = asset.src;
+  return new Promise((resolve, reject) => {
+    const timeout = window.setTimeout(() => reject(new Error("Image loading timed out")), 10000);
+    image.decode().then(resolve, reject).finally(() => window.clearTimeout(timeout));
+  });
+}
+
+function updateGalleryImageSizes(cards) {
+  cards.forEach(card => {
+    const image = card.querySelector("img[srcset]");
+    if (image) updateResponsiveSize(image);
+  });
+}
+
 const mediaObserver = "IntersectionObserver" in window
   ? new IntersectionObserver(entries => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
           const image = entry.target;
-          image.src = image.dataset.src;
+          loadResponsiveImage(image);
           mediaObserver.unobserve(image);
         }
       });
@@ -171,6 +223,14 @@ function createMediaCard(config, asset, fileNumber) {
   figure.dataset.order = fileNumber;
   figure.dataset.aspect = asset.width / asset.height;
   figure.dataset.previewItem = fileNumber > previewLimit ? "extra" : "visible";
+  if (asset.brandId) {
+    figure.dataset.brand = asset.brandId;
+    figure.dataset.brands = asset.brandIds.join(" ");
+    figure.dataset.brandLabel = asset.brand;
+    figure.dataset.category = asset.categoryId;
+    figure.dataset.projectId = asset.projectId;
+    figure.dataset.role = asset.role;
+  }
 
   const button = document.createElement("button");
   button.type = "button";
@@ -186,6 +246,7 @@ function createMediaCard(config, asset, fileNumber) {
   image.dataset.titleNumber = fileNumber;
   image.dataset.titleConfig = config.gallerySelector;
   image.dataset.src = asset.src;
+  if (asset.srcSet) image.dataset.srcset = asset.srcSet;
   image.width = asset.width;
   image.height = asset.height;
   image.loading = "lazy";
@@ -197,7 +258,7 @@ function createMediaCard(config, asset, fileNumber) {
   if (mediaObserver) {
     mediaObserver.observe(image);
   } else {
-    image.src = asset.src;
+    loadResponsiveImage(image);
   }
 
   if (config.gallerySelector === "#video-gallery") {
@@ -256,7 +317,9 @@ function updateViewAllButton(gallery, button) {
     const isExpanded = gallery.classList.toggle("is-expanded");
     button.setAttribute("aria-expanded", String(isExpanded));
     button.textContent = isExpanded ? translate(button.dataset.showLessKey) : translate(button.dataset.viewAllKey);
+    if (gallery.id === "work-gallery") workFilters?.setExpanded(isExpanded);
     layoutPuzzleGallery(gallery.id === "video-gallery" ? "#video-gallery" : "#work-gallery");
+    if (gallery.id === "work-gallery") workPreviewRotation?.refresh();
 
     if (!isExpanded) {
       gallery.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -286,6 +349,172 @@ function loadGallery(config) {
 function visibleWorkCards() {
   return [...document.querySelectorAll("#work-gallery .work-card")]
     .filter((card) => window.getComputedStyle(card).display !== "none");
+}
+
+function setupWorkFilters() {
+  const form = document.querySelector("#work-filters");
+  const gallery = document.querySelector("#work-gallery");
+  const category = document.querySelector("#work-category");
+  const brand = document.querySelector("#work-brand");
+  const query = document.querySelector("#work-query");
+  const count = document.querySelector("#work-count");
+  const empty = document.querySelector("#work-no-results");
+  const cards = [...gallery.querySelectorAll(".work-card")];
+  const clean = value => value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+  function populate(select, entries) {
+    const selected = select.value || "all";
+    select.replaceChildren(new Option(translate("work.showAll"), "all"));
+    [...entries].sort((a, b) => a[1].localeCompare(b[1], currentLanguage)).forEach(([id, label]) => {
+      select.add(new Option(label, id));
+    });
+    select.value = selected;
+  }
+
+  function apply() {
+    const expanded = gallery.classList.contains("is-expanded");
+    const needle = clean(query.value.trim());
+    let matches = 0;
+    cards.forEach(card => {
+      const asset = galleryAssets.work[Number(card.dataset.order) - 1];
+      const text = clean([assetTitle(asset), asset.brand, ...(asset.brands || []), asset.projectId, asset.year,
+        asset.categoryLabel?.[currentLanguage] || asset.category].join(" "));
+      const match = (category.value === "all" || asset.categoryId === category.value)
+        && (brand.value === "all" || (asset.brandIds || [asset.brandId]).includes(brand.value))
+        && text.includes(needle);
+      card.hidden = expanded && !match;
+      if (match) matches += 1;
+    });
+    count.textContent = translate("work.count").replace("{count}", matches).replace("{total}", cards.length);
+    empty.hidden = !expanded || matches > 0;
+    layoutPuzzleGallery("#work-gallery");
+  }
+
+  function refresh() {
+    const categories = new Map();
+    const brands = new Map();
+    galleryAssets.work.forEach(asset => {
+      if (asset.categoryId) categories.set(asset.categoryId, asset.categoryLabel?.[currentLanguage] || asset.category);
+      (asset.brandIds || [asset.brandId]).forEach((id, index) => {
+        if (id) brands.set(id, asset.brands?.[index] || asset.brand);
+      });
+    });
+    populate(category, categories);
+    populate(brand, brands);
+    apply();
+  }
+
+  function reset() {
+    category.value = brand.value = "all";
+    query.value = "";
+    apply();
+  }
+
+  form.addEventListener("submit", event => event.preventDefault());
+  form.addEventListener("reset", event => {
+    event.preventDefault();
+    reset();
+  });
+  category.addEventListener("change", apply);
+  brand.addEventListener("change", apply);
+  query.addEventListener("input", apply);
+  document.querySelector("#work-view-all").setAttribute("aria-controls", "work-filters work-gallery");
+  refresh();
+  return {
+    refresh,
+    setExpanded(expanded) {
+      form.hidden = !expanded;
+      reset();
+      if (expanded) window.requestAnimationFrame(() => form.scrollIntoView({
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth",
+        block: "start",
+      }));
+    },
+  };
+}
+
+function setupWorkPreviewRotation() {
+  const gallery = document.querySelector("#work-gallery");
+  if (!gallery) return null;
+
+  const cards = [...gallery.querySelectorAll("figure")];
+  const candidates = cards.filter(card => !card.dataset.role || card.dataset.role === "project");
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+  let pending = false;
+  let queue = [];
+  let timer;
+
+  function refresh() {
+    // Automatic changes must not repeatedly announce the gallery to screen readers.
+    gallery.setAttribute("aria-live", gallery.classList.contains("is-expanded") ? "polite" : "off");
+    window.clearInterval(timer);
+    if (!gallery.classList.contains("is-expanded") && candidates.length > previewLimit) {
+      timer = window.setInterval(advance, 7000);
+    }
+  }
+
+  function canRotate() {
+    const bounds = gallery.getBoundingClientRect();
+    return !document.hidden && !lightbox?.open
+      && !gallery.classList.contains("is-expanded")
+      && !gallery.contains(document.activeElement)
+      && bounds.top < window.innerHeight && bounds.bottom > 0;
+  }
+
+  function shuffle(items) {
+    const result = [...items];
+    for (let i = result.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [result[i], result[j]] = [result[j], result[i]];
+    }
+    return result;
+  }
+
+  async function advance() {
+    if (pending || !canRotate() || candidates.length <= previewLimit) return false;
+    const current = new Set(cards.filter(card => card.dataset.previewItem === "visible"));
+    if (queue.filter(card => !current.has(card)).length < previewLimit) {
+      const queued = new Set(queue);
+      queue.push(...shuffle(candidates.filter(card => !queued.has(card) && !current.has(card))));
+    }
+    const available = queue.filter(card => !current.has(card));
+    const next = [];
+    const brands = new Set();
+    while (next.length < previewLimit && available.length) {
+      // Mix brands within a batch, while eventually cycling through every project.
+      let index = available.findIndex(card => !brands.has(card.dataset.brand));
+      if (index < 0) index = 0;
+      const card = available.splice(index, 1)[0];
+      next.push(card);
+      brands.add(card.dataset.brand);
+    }
+    if (next.length !== previewLimit) return false;
+
+    pending = true;
+    try {
+      // Fetch only the next four responsive previews, keeping hidden projects lazy.
+      await Promise.all(next.map(card => {
+        const asset = galleryAssets.work[Number(card.dataset.order) - 1];
+        return preloadResponsiveAsset(asset, gallery.clientWidth / (mobileNavigation.matches ? 1 : 2));
+      }));
+      if (!canRotate()) return false;
+      const selected = new Set(next);
+      cards.forEach(card => card.dataset.previewItem = selected.has(card) ? "visible" : "extra");
+      queue = queue.filter(card => !selected.has(card));
+      layoutPuzzleGallery("#work-gallery");
+      if (!reducedMotion.matches) gallery.animate([{ opacity: 0.5 }, { opacity: 1 }], { duration: 300 });
+      return true;
+    } catch {
+      // A failed image request must not replace the currently visible selection.
+      return false;
+    } finally {
+      pending = false;
+    }
+  }
+
+  reducedMotion.addEventListener("change", refresh);
+  refresh();
+  return { advance, refresh };
 }
 
 function visiblePuzzleCards(selector) {
@@ -351,6 +580,7 @@ function performPuzzleGalleryLayout(selector) {
       card.style.width = "";
       card.style.height = "";
     });
+    updateGalleryImageSizes(cards);
     return;
   }
 
@@ -373,6 +603,7 @@ function performPuzzleGalleryLayout(selector) {
   if (row.length) {
     applyPuzzleRow(row, rowWidth, gap, true);
   }
+  updateGalleryImageSizes(cards);
 }
 
 function arrangePuzzleCards(cards) {
@@ -472,6 +703,8 @@ function setLanguage(language) {
   heroImages.forEach(image => image.alt = assetTitle(assetBySrc.get(image.getAttribute("src"))));
   if (lightboxImage?.dataset.assetSrc) lightboxImage.alt = assetTitle(assetBySrc.get(lightboxImage.dataset.assetSrc));
   refreshGeneratedText();
+  workFilters?.refresh();
+  workPreviewRotation?.refresh();
 }
 
 function setMenuOpen(open, returnFocus = false) {
@@ -533,24 +766,63 @@ document.addEventListener("keydown", event => {
 window.addEventListener("resize", () => {
   layoutPuzzleGallery("#work-gallery");
   layoutPuzzleGallery("#video-gallery");
+  heroImages.forEach(updateResponsiveSize);
 });
 
-function shuffleHeroWork() {
-  if (heroWorkImages.length === 0) {
-    return;
+function setHeroAsset(image, asset) {
+  image.dataset.srcset = asset.srcSet || "";
+  updateResponsiveSize(image);
+  if (asset.srcSet) image.srcset = asset.srcSet;
+  else image.removeAttribute("srcset");
+  image.src = asset.src;
+  image.alt = assetTitle(asset);
+}
+
+async function shuffleHeroWork() {
+  const panel = document.querySelector(".hero-showcase");
+  const bounds = panel?.getBoundingClientRect();
+  if (!heroImages.length || !heroWorkImages.length || heroRotationPending || document.hidden || lightbox?.open
+    || !bounds || bounds.bottom <= 0 || bounds.top >= window.innerHeight) return false;
+
+  const currentSources = new Set([...heroImages].map(image => image.getAttribute("src")));
+  if (heroQueue.filter(asset => !currentSources.has(asset.src)).length < heroImages.length) {
+    const queued = new Set(heroQueue);
+    const additions = heroWorkImages.filter(asset => !queued.has(asset) && !currentSources.has(asset.src));
+    for (let i = additions.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [additions[i], additions[j]] = [additions[j], additions[i]];
+    }
+    heroQueue.push(...additions);
   }
+  const available = heroQueue.filter(asset => !currentSources.has(asset.src));
+  const next = [];
+  const brands = new Set();
+  while (next.length < heroImages.length && available.length) {
+    let index = available.findIndex(asset => !brands.has(asset.brandId));
+    if (index < 0) index = 0;
+    const asset = available.splice(index, 1)[0];
+    next.push(asset);
+    brands.add(asset.brandId);
+  }
+  if (next.length !== heroImages.length) return false;
 
-  const shuffled = [...heroWorkImages].sort(() => Math.random() - 0.5);
-
-  heroImages.forEach((image, index) => {
-    image.style.opacity = "0";
-    setTimeout(() => {
-      const asset = shuffled[index % shuffled.length];
-      image.src = asset.src;
-      image.alt = assetTitle(asset);
-      image.style.opacity = "1";
-    }, 260);
-  });
+  heroRotationPending = true;
+  heroQueue = heroQueue.filter(asset => !next.includes(asset));
+  try {
+    await Promise.all(next.map((asset, index) => preloadResponsiveAsset(asset, heroImages[index].getBoundingClientRect().width)));
+    if (document.hidden || lightbox?.open) return false;
+    if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      heroImages.forEach(image => image.style.opacity = "0");
+      await new Promise(resolve => window.setTimeout(resolve, 260));
+    }
+    heroImages.forEach((image, index) => setHeroAsset(image, next[index]));
+    return true;
+  } catch {
+    return false;
+  } finally {
+    heroImages.forEach(image => image.style.opacity = "1");
+    heroRotationPending = false;
+  }
 }
 
 function seedHeroImages() {
@@ -560,8 +832,7 @@ function seedHeroImages() {
 
   heroImages.forEach((image, index) => {
     const asset = assetBySrc.get(image.getAttribute("src")) || heroWorkImages[index % heroWorkImages.length];
-    image.src = asset.src;
-    image.alt = assetTitle(asset);
+    setHeroAsset(image, asset);
   });
 }
 
@@ -572,6 +843,8 @@ function initSite() {
 
   loadGallery(workConfig);
   loadGallery(videoConfig);
+  workFilters = setupWorkFilters();
+  workPreviewRotation = setupWorkPreviewRotation();
 
   languageButtons.forEach((button) => {
     button.addEventListener("click", () => setLanguage(button.dataset.language));
