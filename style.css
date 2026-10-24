@@ -605,19 +605,6 @@ a:focus-visible {
   overflow-wrap: anywhere;
 }
 
-.map-container {
-  width: 100%;
-  margin-top: 28px;
-}
-
-.map-frame {
-  width: 100%;
-  height: 560px;
-  border: 0;
-  border-radius: 8px;
-  filter: grayscale(0.15);
-}
-
 footer {
   color: #ffffff;
   background: #18191b;
@@ -833,10 +820,6 @@ body.lightbox-open {
   .video-card .media-preview,
   .video-card img {
     height: auto;
-  }
-
-  .map-frame {
-    height: 390px;
   }
 
   .footer-inner {

@@ -27,7 +27,6 @@ const translations = {
     "a11y.preview": "Media preview",
     "a11y.closePreview": "Close preview",
     "a11y.openImage": "Open preview:",
-    "a11y.map": "Total Studio location in Bucharest",
     "nav.home": "Home",
     "nav.about": "About",
     "nav.services": "Services",
@@ -84,7 +83,6 @@ const translations = {
     "a11y.preview": "Previzualizare imagine",
     "a11y.closePreview": "Închide previzualizarea",
     "a11y.openImage": "Deschide previzualizarea:",
-    "a11y.map": "Locația Total Studio în București",
     "nav.home": "Acasă",
     "nav.about": "Despre",
     "nav.services": "Servicii",
@@ -836,7 +834,23 @@ function seedHeroImages() {
   });
 }
 
+function setupNavigationAddress() {
+  const addressLink = document.querySelector("#navigation-address");
+  if (!addressLink) return;
+
+  const address = encodeURIComponent(addressLink.dataset.mapAddress);
+  const userAgent = navigator.userAgent;
+  if (/Android/i.test(userAgent)) {
+    // Let Android resolve the user's preferred app for geographic links.
+    addressLink.href = `geo:0,0?q=${address}`;
+  } else if (/iPhone|iPad|iPod|Macintosh/i.test(userAgent)) {
+    addressLink.href = `https://maps.apple.com/?q=${address}`;
+  }
+  // Other devices and browsers without JavaScript retain the web map link.
+}
+
 function initSite() {
+  setupNavigationAddress();
   setLanguage(currentLanguage);
   setMenuOpen(false);
   seedHeroImages();
